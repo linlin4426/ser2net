@@ -348,6 +348,7 @@ handle_password(struct gensio *net, const char *authdir, const char *password)
     }
 
 #ifdef HAVE_CRYPT_R
+    memset(&cdata, 0, sizeof(cdata));
     newhash = crypt_r(password, readpw, &cdata);
 #else
     gensio_os_funcs_lock(so, crypt_lock);
