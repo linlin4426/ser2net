@@ -604,6 +604,9 @@ do_detach(void)
 
 static struct gensio_lock *config_lock;
 static struct gensio_lock *maint_lock;
+#ifndef HAVE_CRYPT_R
+struct gensio_lock *crypt_lock;
+#endif
 
 static int in_config_read = 0;
 
@@ -1011,6 +1014,14 @@ main(int argc, char *argv[])
 	return 1;
     }
 
+#ifndef HAVE_CRYPT_R
+    crypt_lock = gensio_os_funcs_alloc_lock(so);
+    if (!crypt_lock) {
+	fprintf(stderr, "Could not alloc ser2net crypt lock\n");
+	return 1;
+    }
+#endif
+
     err = init_dataxfer();
     if (err) {
 	fprintf(stderr,
@@ -1098,6 +1109,9 @@ main(int argc, char *argv[])
     if (config_lines)
 	free(config_lines);
 
+#ifndef HAVE_CRYPT_R
+    gensio_os_funcs_free_lock(so, crypt_lock);
+#endif
     gensio_os_funcs_free_lock(so, maint_lock);
     gensio_os_funcs_free_lock(so, config_lock);
     gensio_os_funcs_free(so);

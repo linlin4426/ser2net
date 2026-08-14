@@ -66,6 +66,10 @@ int sub_time(gensio_time *left, gensio_time *right);
    integer was invalid.  Spaces are not handled. */
 int scan_int(const char *str);
 
+#ifndef HAVE_CRYPT_R
+/* Used to avoid races in crypt() when crypt_r() is not available */
+extern struct gensio_lock *crypt_lock;
+#endif
 /*
  * Handle authorization events from accepters.
  */

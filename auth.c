@@ -33,6 +33,10 @@
 #include <gensio/gensio_list.h>
 #include "ser2net.h"
 
+#ifndef HAVE_CRYPT_R
+#include <gensio/gensio_os_funcs_public.h>
+#endif
+
 #if defined(USE_PAM)
 #include <pwd.h>
 #include <security/pam_appl.h>
@@ -288,7 +292,9 @@ handle_password(struct gensio *net, const char *authdir, const char *password)
     char readpw[256], *s;
     int err;
     bool hashed = true;
+#ifdef HAVE_CRYPT_R
     struct crypt_data cdata;
+#endif
     char *newhash;
 
     len = sizeof(username);
@@ -341,7 +347,13 @@ handle_password(struct gensio *net, const char *authdir, const char *password)
 	return GE_NOTSUP;
     }
 
+#ifdef HAVE_CRYPT_R
     newhash = crypt_r(password, readpw, &cdata);
+#else
+    gensio_os_funcs_lock(so, crypt_lock);
+    newhash = crypt(password, readpw);
+    gensio_os_funcs_unlock(so, crypt_lock);
+#endif
     if (!newhash)
 	return GE_NOTSUP;
 
